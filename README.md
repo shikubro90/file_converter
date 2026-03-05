@@ -12,6 +12,7 @@ Live at **[anyconv.betopialimited.com](https://anyconv.betopialimited.com)**
 - Real-time progress polling
 - Files auto-deleted after 30 minutes
 - No account or sign-up required
+- **PDF Editor** — add text overlays, change font, size, and color directly in the browser (5 uses/hour)
 
 ---
 
@@ -93,6 +94,27 @@ All file paths are validated to ensure they stay within `storage/uploads` or `st
 ## File Cleanup
 
 The worker runs a cleanup job every **10 minutes** and deletes any files older than **30 minutes** from both `storage/uploads` and `storage/outputs`.
+
+---
+
+## PDF Editor
+
+Available at `/edit`. Entirely client-side — the PDF never leaves your browser.
+
+### How it works
+
+1. Upload any PDF
+2. Add text annotations: choose page, position (% of page), font size (6–144 pt), one of 6 standard fonts, any color, and optional bullet prefix
+3. Queue multiple annotations and preview them live
+4. Click **Download** — the app calls `POST /api/pdf-edit` to check your rate limit, then generates the edited PDF in-browser using **pdf-lib**
+
+### Rate Limit
+
+| Endpoint | Limit |
+|----------|-------|
+| `POST /api/pdf-edit` | **5 downloads per hour per IP** |
+
+When the limit is reached, a warning banner displays how many minutes remain until reset. Exceeding the limit repeatedly triggers the IP ban system.
 
 ---
 

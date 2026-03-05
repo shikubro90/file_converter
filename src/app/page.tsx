@@ -7,6 +7,26 @@ const FEATURES = [
   { icon: "🎬", label: "Video", desc: "MP4 · WebM · MKV · AVI · GIF" },
 ];
 
+const TOOLS = [
+  {
+    href: "/convert",
+    icon: "⇄",
+    label: "Convert Files",
+    desc: "Images, documents, audio & video",
+    gradient: "from-violet-600 to-fuchsia-600",
+    glow: "shadow-violet-900/40",
+  },
+  {
+    href: "/edit",
+    icon: "✏️",
+    label: "Edit PDF",
+    desc: "Add text, change font, size & color",
+    gradient: "from-amber-500 to-orange-600",
+    glow: "shadow-amber-900/40",
+    badge: "5 uses / hour",
+  },
+];
+
 export default function Home() {
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
@@ -39,16 +59,25 @@ export default function Home() {
           </p>
         </div>
 
-        {/* CTA */}
-        <Link
-          href="/convert"
-          className="group relative inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-white bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-900/40 transition-all duration-200 hover:shadow-violet-700/40 hover:scale-[1.02]"
-        >
-          Start Converting
-          <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
-        </Link>
+        {/* CTA buttons */}
+        <div className="flex flex-wrap gap-3 justify-center">
+          {TOOLS.map((t) => (
+            <Link
+              key={t.href}
+              href={t.href}
+              className={`group relative inline-flex flex-col items-center gap-1 px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r ${t.gradient} shadow-lg ${t.glow} transition-all duration-200 hover:scale-[1.02] hover:brightness-110`}
+            >
+              <span className="text-xl">{t.icon}</span>
+              <span>{t.label}</span>
+              <span className="text-xs font-normal opacity-80">{t.desc}</span>
+              {t.badge && (
+                <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 border border-white/30">
+                  {t.badge}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
 
         {/* Format grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mt-4">
