@@ -8,7 +8,6 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    needs: []
 
     steps:
       - name: Deploy via SSH
@@ -22,6 +21,15 @@ jobs:
             set -e
             cd ~/file_converter
             git pull origin main
+
+            # Install / update nginx site config
+            cp nginx.conf /etc/nginx/sites-available/anyconv.betopialimited.com
+            ln -sf /etc/nginx/sites-available/anyconv.betopialimited.com \
+                   /etc/nginx/sites-enabled/anyconv.betopialimited.com
+            nginx -t && systemctl reload nginx
+
+            # Rebuild and restart app containers (no nginx container)
             docker compose up -d --build --remove-orphans
             docker image prune -f
+
             echo "Deploy complete: $(date)"
