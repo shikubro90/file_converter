@@ -4,10 +4,11 @@ import fs from "fs/promises";
 import { UPLOADS_DIR, OUTPUTS_DIR, ensureDirs, assertWithinDir } from "@/lib/storage";
 import { conversionQueue, ConversionJobData } from "@/lib/queue";
 import { checkRateLimit, getIP } from "@/lib/rateLimit";
+import { getBanInfo, trackSuspicious } from "@/lib/ipBan";
 
-// 30 conversions per 15 minutes per IP
 const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 15 * 60 * 1000;
+const BAN_COOKIE = "blocked_until";
 
 const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/tiff"];
 const PDF_MIME = "application/pdf";
@@ -41,9 +42,32 @@ async function findUploadedFile(fileId: string): Promise<string | null> {
   return filePath;
 }
 
+function banResponse(until: number) {
+  const res = NextResponse.json(
+    { error: "Your IP has been blocked for 1 hour due to suspicious activity. Please try again later." },
+    { status: 403 }
+  );
+  res.cookies.set(BAN_COOKIE, String(until), {
+    path: "/",
+    expires: new Date(until),
+    sameSite: "lax",
+  });
+  return res;
+}
+
 export async function POST(req: NextRequest) {
-  const { allowed, retryAfter } = checkRateLimit(`convert:${getIP(req)}`, RATE_LIMIT, RATE_WINDOW_MS);
+  const ip = getIP(req);
+
+  const ban = getBanInfo(ip);
+  if (ban.banned) return banResponse(ban.until);
+
+  const { allowed, retryAfter } = checkRateLimit(`convert:${ip}`, RATE_LIMIT, RATE_WINDOW_MS);
   if (!allowed) {
+    const banned = trackSuspicious(ip, "rate_limit_hit");
+    if (banned) {
+      const b = getBanInfo(ip);
+      return banResponse(b.banned ? b.until : Date.now() + 3600_000);
+    }
     return NextResponse.json(
       { error: "Too many conversions. Try again later." },
       { status: 429, headers: { "Retry-After": String(retryAfter) } }
@@ -54,25 +78,26 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
+    trackSuspicious(ip, "malformed_request");
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const { fileId, targetExt, sourceMime } = body;
 
-  if (!fileId || typeof fileId !== "string") {
-    return NextResponse.json({ error: "Missing fileId" }, { status: 400 });
-  }
-  if (!sourceMime || typeof sourceMime !== "string") {
-    return NextResponse.json({ error: "Missing sourceMime" }, { status: 400 });
+  if (!fileId || typeof fileId !== "string" || !sourceMime || typeof sourceMime !== "string") {
+    trackSuspicious(ip, "malformed_request");
+    return NextResponse.json({ error: "Missing fileId or sourceMime" }, { status: 400 });
   }
 
   const sourceCategory = getMimeCategory(sourceMime);
   if (!sourceCategory) {
+    trackSuspicious(ip, "malformed_request");
     return NextResponse.json({ error: "Unsupported source MIME type" }, { status: 415 });
   }
 
   const allowed2 = ALLOWED_TARGETS[sourceCategory];
   if (!targetExt || !allowed2.includes(targetExt)) {
+    trackSuspicious(ip, "malformed_request");
     return NextResponse.json(
       { error: `targetExt must be one of: ${allowed2.join(", ")} for this file type` },
       { status: 400 }
