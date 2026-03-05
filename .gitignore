@@ -1,0 +1,8 @@
+.next/
+node_modules/
+worker/node_modules/
+worker/dist/
+storage/
+*.env
+.env.local
+
