@@ -48,7 +48,11 @@ cleanupOldFiles(); // run once on startup
 function spawnProcess(cmd: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     // spawn — never passes args through a shell; no injection risk
-    const proc = spawn(cmd, args, { stdio: "pipe" });
+    const env = {
+      ...process.env,
+      PATH: `/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${process.env.PATH ?? ""}`,
+    };
+    const proc = spawn(cmd, args, { stdio: "pipe", env });
     const stderr: Buffer[] = [];
     proc.stderr?.on("data", (chunk: Buffer) => stderr.push(chunk));
     proc.on("error", (err: NodeJS.ErrnoException) => {
