@@ -155,6 +155,15 @@ export default function ConvertPage() {
           Back
         </Link>
         <span className="mx-auto font-semibold text-white tracking-tight">Converter</span>
+        <Link
+          href="/edit"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-300 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+          </svg>
+          Edit PDF
+        </Link>
       </nav>
 
       <main className="relative z-10 flex flex-col items-center gap-6 px-4 py-12 flex-1">
@@ -344,6 +353,23 @@ export default function ConvertPage() {
             </div>
           )}
         </div>
+
+        {/* Edit PDF nudge — shown when a PDF is uploaded */}
+        {uploadResult?.mime === "application/pdf" && (
+          <Link
+            href="/edit"
+            className="flex items-center gap-3 w-full max-w-lg px-5 py-4 rounded-xl border border-amber-500/25 bg-amber-500/5 hover:bg-amber-500/10 transition-colors group"
+          >
+            <span className="text-2xl">✏️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-300">Want to edit this PDF instead?</p>
+              <p className="text-xs text-slate-500 mt-0.5">Add text, change font, size &amp; color — free, 5 uses/hour</p>
+            </div>
+            <svg className="w-4 h-4 text-slate-500 group-hover:text-amber-400 transition-colors shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+        )}
       </main>
     </div>
   );
