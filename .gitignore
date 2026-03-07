@@ -1,3 +1,4 @@
+.claude/
 .next/
 node_modules/
 worker/node_modules/
@@ -6,3 +7,4 @@ storage/
 *.env
 .env.local
 
+public/pdf.worker.min.mjs
